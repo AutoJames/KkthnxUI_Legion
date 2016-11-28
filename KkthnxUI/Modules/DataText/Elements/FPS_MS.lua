@@ -1,7 +1,18 @@
 local K, C, L = select(2, ...):unpack()
-if C.DataText.System ~= true then return end
 
+local GetAddOnInfo = GetAddOnInfo
+local GetNumAddOns = GetNumAddOns
+local IsAddOnLoaded = IsAddOnLoaded
+local UpdateAddOnMemoryUsage = UpdateAddOnMemoryUsage
+local GetAddOnMemoryUsage = GetAddOnMemoryUsage
+local GetNetStats = GetNetStats
+local GetFramerate = GetFramerate
+local GetAvailableBandwidth = GetAvailableBandwidth
+local InCombatLockdown = InCombatLockdown
+local collectgarbage = collectgarbage
+local select = select
 local format = format
+
 local int = 1
 local int2 = 2
 local MemoryTable = {}
@@ -10,16 +21,11 @@ local Mult = 10^1
 local bandwidthString = "%.2f Mbps"
 local percentageString = "%.2f%%"
 
-local SystemDT = CreateFrame("Frame")
-
+local DataText = K.DataTexts
+local NameColor = DataText.NameColor
+local ValueColor = DataText.ValueColor
 local MemoryColor = K.RGBToHex(1, 1, 1)
-local StatColor = K.RGBToHex(1, 1, 1)
-local StatClassColor = K.RGBToHex(K.Color.r, K.Color.g, K.Color.b)
-local Movers = K.Movers
 
-local Text = KkthnxUIMinimapStats:CreateFontString(nil, "OVERLAY")
-Text:SetFont(C.Media.Font, C.Media.Font_Size, C.Media.Font_Style)
-Text:SetPoint(unpack(C.Position.SystemDT))
 
 -- Format Memory
 local FormatMemory = function(memory)
@@ -87,10 +93,10 @@ local Update = function(self, second)
 			MS = "0"
 		end
 
-		Text:SetFormattedText("%s %s %s %s", StatColor .. Rate .. "|r", StatClassColor .. L_DATATEXT_FPS .. "|r", "& " .. StatColor .. MS .. "|r", StatClassColor .. L_DATATEXT_MS .. "|r")
+		self.Text:SetFormattedText("%s %s %s %s", ValueColor .. Rate .. "|r", NameColor .. L.DataText.FPS .. "|r", "& " .. ValueColor .. MS .. "|r", NameColor .. L.DataText.MS .. "|r")
 		int2 = 2
 
-		self:SetAllPoints(Text)
+		--self:SetAllPoints(Text)
 	end
 end
 
@@ -98,13 +104,13 @@ end
 local OnEnter = function(self)
 	if (not InCombatLockdown()) then
 
+		GameTooltip:SetOwner( self:GetTooltipAnchor() )
 		GameTooltip:ClearLines()
-		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 0, 5)
 
 		local Bandwidth = GetAvailableBandwidth()
 
 		local TotalMemory = UpdateMemory()
-		GameTooltip:AddDoubleLine(L_DATATEXT_TOTALMEMORY, FormatMemory(TotalMemory), 0.69, 0.31, 0.31,0.84, 0.75, 0.65)
+		GameTooltip:AddDoubleLine(L.DataText.TotalMemory, FormatMemory(TotalMemory), 0.69, 0.31, 0.31,0.84, 0.75, 0.65)
 		GameTooltip:AddLine(" ")
 
 		for i = 1, #MemoryTable do
@@ -118,8 +124,8 @@ local OnEnter = function(self)
 
 		GameTooltip:AddLine(" ")
 		if (Bandwidth ~= 0) then
-			GameTooltip:AddDoubleLine(L_DATATEXT_BANDWIDTH , string.format(bandwidthString, Bandwidth),0.69, 0.31, 0.31,0.84, 0.75, 0.65)
-			GameTooltip:AddDoubleLine(L_DATATEXT_DOWNLOAD , string.format(percentageString, GetDownloadedPercentage() * 100), 0.69, 0.31, 0.31, 0.84, 0.75, 0.65)
+			GameTooltip:AddDoubleLine(L.DataText.Bandwidth , string.format(bandwidthString, Bandwidth),0.69, 0.31, 0.31,0.84, 0.75, 0.65)
+			GameTooltip:AddDoubleLine(L.DataText.Download , string.format(percentageString, GetDownloadedPercentage() * 100), 0.69, 0.31, 0.31, 0.84, 0.75, 0.65)
 			GameTooltip:AddLine(" ")
 		end
 
@@ -144,7 +150,14 @@ local ResetData = function(self, event)
 	wipe(MemoryTable)
 end
 
-function SystemDT:Enable()
+local Enable = function( self )
+	if( not self.Text ) then
+		local Text = self:CreateFontString( nil, "OVERLAY" )
+		Text:SetFont( DataText.Font, DataText.Size, DataText.Flags )
+
+		self.Text = Text
+	end
+
 	KilobyteString = "%d ".. MemoryColor .."kb".."|r"
 	MegabyteString = "%.2f ".. MemoryColor .."mb".."|r"
 	self:RegisterEvent("ADDON_LOADED")
@@ -156,18 +169,13 @@ function SystemDT:Enable()
 	Update(self, 10)
 end
 
-function SystemDT:Disable()
-	self.Text:SetText("")
-	self:UnregisterAllEvents()
+local Disable = function( self )
+	self.Text:SetText( "" )
 	self:SetScript("OnEvent", nil)
-	self:SetScript("OnUpdate", nil)
-	self:SetScript("OnEnter", nil)
-	self:SetScript("OnLeave", nil)
+	self:SetScript( "OnUpdate", nil )
+	self:SetScript( "OnEnter", nil )
+	self:SetScript( "OnLeave", nil )
 	self:SetScript("OnMouseUp", nil)
 end
 
-if C.DataText.System then
-	SystemDT:Enable()
-else
-	SystemDT:Disable()
-end
+DataText:Register("FPS&MS", Enable, Disable, OnUpdate )

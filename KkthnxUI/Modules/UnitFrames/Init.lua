@@ -4,6 +4,15 @@ if C.Unitframe.Enable ~= true then return end
 local _, ns = ...
 local oUF = ns.oUF or oUF
 
+local pairs = pairs
+local select = select
+local unpack = unpack
+
+local hooksecurefunc = hooksecurefunc
+local SetOverrideBindingClick = SetOverrideBindingClick
+local IsControlKeyDown = IsControlKeyDown
+local IsAltKeyDown = IsAltKeyDown
+
 -- Event handler
 local oUFKkthnx = CreateFrame("Frame", "oUFKkthnx")
 oUFKkthnx:RegisterEvent("ADDON_LOADED")
@@ -16,25 +25,9 @@ function oUFKkthnx:ADDON_LOADED(event, addon)
 		return
 	end
 
-	-- Focus Key
-	if (C.Unitframe.FocusButton ~= "NONE") then
-		--Blizzard raid frame
-		hooksecurefunc("CompactUnitFrame_SetUpFrame", function(frame, ...)
-			if frame then
-				frame:SetAttribute(C.Unitframe.FocusModifier.."type"..C.Unitframe.FocusButton, "focus")
-			end
-		end)
-		-- World Models
-		local foc = CreateFrame("CheckButton", "Focuser", UIParent, "SecureActionButtonTemplate")
-		foc:SetAttribute("type1", "macro")
-		foc:SetAttribute("macrotext", "/focus mouseover")
-		SetOverrideBindingClick(Focuser, true, C.Unitframe.FocusModifier.."BUTTON"..C.Unitframe.FocusButton, "Focuser")
-	end
-
 	self:UnregisterEvent(event)
-	self:RegisterEvent("MODIFIER_STATE_CHANGED") -- Showing auras
 
-	-- Skin the Countdown/BG timers:
+	-- Skin the Countdown/BG timers
 	self:RegisterEvent("START_TIMER")
 
 	self.ADDON_LOADED = nil
@@ -74,36 +67,6 @@ function oUFKkthnx:START_TIMER(event)
 			local region = select(i, bar:GetRegions())
 			if (region and region:GetObjectType() == "FontString") then
 				region:SetFont(C.Media.Font, 13, C.Media.Font_Style)
-			end
-		end
-	end
-end
-
-function oUFKkthnx:MODIFIER_STATE_CHANGED(event, key, state)
-	if (IsControlKeyDown() and (key == "LALT" or key == "RALT")) or
-	(IsAltKeyDown() and (key == "LCTRL" or key == "RCTRL"))
-	then
-		local a, b
-		if state == 1 then
-			a, b = "CustomFilter", "__CustomFilter"
-		else
-			a, b = "__CustomFilter", "CustomFilter"
-		end
-		for i = 1, #oUF.objects do
-			local object = oUF.objects[i]
-			if object.style == "oUF_Kkthnx" then
-				local buffs = object.Auras or object.Buffs
-				local debuffs = object.Debuffs
-				if buffs and buffs[a] then
-					buffs[b] = buffs[a]
-					buffs[a] = nil
-					buffs:ForceUpdate()
-				end
-				if debuffs and debuffs[a] then
-					debuffs[b] = debuffs[a]
-					debuffs[a] = nil
-					debuffs:ForceUpdate()
-				end
 			end
 		end
 	end
