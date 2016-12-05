@@ -1,12 +1,28 @@
 local K, C, L = select(2, ...):unpack()
 
 -- Lua API
-local unpack = unpack
 local _G = _G
+local select = select
+local tostring = tostring
+local unpack = unpack
 
 -- Wow API
 local CreateFrame = CreateFrame
+local GetActiveSpecGroup = GetActiveSpecGroup
+local GetNumShapeshiftForms = GetNumShapeshiftForms
+local GetNumSpecializations = GetNumSpecializations
+local GetSpecialization = GetSpecialization
+local GetSpecializationInfo = GetSpecializationInfo
+local InCombatLockdown = InCombatLockdown
+local IsAddOnLoaded = IsAddOnLoaded
+local IsShiftKeyDown = IsShiftKeyDown
+local SetSpecialization = SetSpecialization
 local UIParent = UIParent
+
+-- Global variables that we don't cache, list them here for mikk's FindGlobals script
+-- GLOBALS: UIErrorsFrame, ERR_NOT_IN_COMBAT, Lib_EasyMenu, Recount_MainWindow
+-- GLOBALS: Skada, UIConfigMain, CreateUIConfig, HideUIPanel, Menu, GameTooltip
+
 local Movers = K.Movers
 
 -- Bottom bars anchor
@@ -93,8 +109,8 @@ ShiftAnchor:SetScript("OnEvent", function(self, event, ...)
 end)
 
 -- Spec
-local LeftClickMenu = { }
-LeftClickMenu[1] = { text = L.ConfigButton.SPECMENU, isTitle = true, notCheckable = true}
+local LeftClickMenu = {}
+LeftClickMenu[1] = {text = L.ConfigButton.SpecMenu, isTitle = true, notCheckable = true}
 
 local function ActiveTalents()
 	local Tree = GetSpecialization(false, false, GetActiveSpecGroup())
@@ -113,7 +129,7 @@ KkthnxUISpecSwap:SetScript("OnEvent", function(...)
 			func = (function()
 				local getSpec = GetSpecialization()
 				if getSpec and getSpec == specIndex then
-					UIErrorsFrame:AddMessage(L.ConfigButton.SPECERROR, 1.0, 0.0, 0.0, 53, 5);
+					UIErrorsFrame:AddMessage(L.ConfigButton.SpecError, 1.0, 0.0, 0.0, 53, 5);
 					return
 				end
 				SetSpecialization(specIndex)

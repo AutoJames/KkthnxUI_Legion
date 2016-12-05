@@ -1,20 +1,38 @@
 local K, C, L = select(2, ...):unpack()
 
-local format, find, gsub = format, string.find, string.gsub
-local match = string.match
+-- Lua API
+local abs = math.abs
 local floor, ceil = math.floor, math.ceil
+local format, find, gsub = format, string.find, string.gsub
+local len = string.len
+local match = string.match
+local modf = math.modf
 local print = print
 local reverse = string.reverse
+local strsub = string.sub
+local tinsert, tremove = tinsert, tremove
 local tonumber, type = tonumber, type
 local unpack, select = unpack, select
-local modf = math.modf
-local len = string.len
+
+-- Wow API
 local CreateFrame = CreateFrame
+local GetBackpackCurrencyInfo = GetBackpackCurrencyInfo
 local GetCombatRatingBonus = GetCombatRatingBonus
-local GetSpellInfo = GetSpellInfo
 local GetNumPartyMembers, GetNumRaidMembers = GetNumPartyMembers, GetNumRaidMembers
+local GetNumWatchedTokens = GetNumWatchedTokens
+local GetSpellInfo = GetSpellInfo
+local IsEveryoneAssistant = IsEveryoneAssistant
+local IsInGroup = IsInGroup
+local IsInRaid = IsInRaid
+local LE_PARTY_CATEGORY_HOME = LE_PARTY_CATEGORY_HOME
+local LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
+local UnitIsGroupAssistant = UnitIsGroupAssistant
+local UnitIsGroupLeader = UnitIsGroupLeader
 local UnitStat, UnitAttackPower, UnitBuff = UnitStat, UnitAttackPower, UnitBuff
-local tinsert, tremove = tinsert, tremove
+
+-- Global variables that we don't cache, list them here for mikk's FindGlobals script
+-- GLOBALS: GameTooltip, WEEKLY
+
 local Locale = GetLocale()
 
 K.Backdrop = {bgFile = C.Media.Blank, edgeFile = C.Media.Blizz, edgeSize = 14, insets = {left = 2.5, right = 2.5, top = 2.5, bottom = 2.5}}
@@ -25,14 +43,14 @@ K.PixelBorder = {edgeFile = C.Media.Blank, edgeSize = K.Mult, insets = {left = K
 K.TwoPixelBorder = {bgFile = C.Media.Blank, edgeFile = C.Media.Blank, tile = true, tileSize = 16, edgeSize = 2, insets = {left = 2, right = 2, top = 2, bottom = 2}}
 K.ShadowBackdrop = {edgeFile = C.Media.Glow, edgeSize = 3, insets = {left = 5, right = 5, top = 5, bottom = 5}}
 
--- This frame everything in KkthnxUI should be anchored to for Eyefinity support.
-K.UIParent = CreateFrame("Frame", "KkthnxUIParent", UIParent)
-K.UIParent:SetFrameLevel(UIParent:GetFrameLevel())
-K.UIParent:SetPoint("CENTER", UIParent, "CENTER")
-K.UIParent:SetSize(UIParent:GetSize())
-K.UIParent.origHeight = K.UIParent:GetHeight()
-
 K.TexCoords = {0.08, 0.92, 0.08, 0.92}
+
+K.PriestColors = {
+	r = 0.99,
+	g = 0.99,
+	b = 0.99,
+	colorStr = "fcfcfc"
+}
 
 K.Print = function(...)
 	print("|cff3c9bed" .. K.UIName .. "|r:", ...)
@@ -194,7 +212,7 @@ K.ShortenString = function(string, numChars, dots)
 end
 
 K.Abbreviate = function(name)
-	local newname = (string.len(name) > 18) and string.gsub(name, "%s?(.[\128-\191]*)%S+%s", "%1. ") or name
+	local newname = (len(name) > 18) and gsub(name, "%s?(.[\128-\191]*)%S+%s", "%1. ") or name
 	return K.ShortenString(newname, 18, false)
 end
 
@@ -303,7 +321,7 @@ K.Currency = function(id, weekly, capped)
 
 	if (amount == 0 and r == 1) then return end
 	if weekly then
-		if id == 390 then week = floor(math.abs(week) / 100) end
+		if id == 390 then week = floor(abs(week) / 100) end
 		if discovered then GameTooltip:AddDoubleLine("\124T" .. tex .. ":12\124t " .. name, "Current: " .. amount .. " - " .. WEEKLY .. ": " .. week .. " / " .. weekmax, r, g, b, r, g, b) end
 	elseif capped then
 		if id == 392 then maxed = 4000 end

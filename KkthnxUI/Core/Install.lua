@@ -1,39 +1,51 @@
 local K, C, L = select(2, ...):unpack()
 
--- LUA API
+-- Lua API
 local _G = _G
 local format = format
-local min, max = math.min, math.max
 local match = string.match
-local unpack, select = unpack, select
+local min, max = math.min, math.max
 local print = print
+local unpack, select = unpack, select
 
--- WOW API
-local CreateFrame = CreateFrame
-local SetCVar = SetCVar
-local ReloadUI = ReloadUI
+-- Wow API
+local ChangeChatColor = ChangeChatColor
+local ChatFrame_AddChannel = ChatFrame_AddChannel
 local ChatFrame_AddMessageGroup = ChatFrame_AddMessageGroup
 local ChatFrame_RemoveAllMessageGroups = ChatFrame_RemoveAllMessageGroups
-local ChatFrame_AddChannel = ChatFrame_AddChannel
 local ChatFrame_RemoveChannel = ChatFrame_RemoveChannel
-local ChangeChatColor = ChangeChatColor
-local ToggleChatColorNamesByClassGroup = ToggleChatColorNamesByClassGroup
-local FCF_ResetChatWindows = FCF_ResetChatWindows
-local FCF_SetLocked = FCF_SetLocked
+local CreateFrame = CreateFrame
 local FCF_DockFrame, FCF_UnDockFrame = FCF_DockFrame, FCF_UnDockFrame
-local FCF_OpenNewWindow = FCF_OpenNewWindow
-local FCF_SavePositionAndDimensions = FCF_SavePositionAndDimensions
 local FCF_GetChatWindowInfo = FCF_GetChatWindowInfo
+local FCF_OpenNewWindow = FCF_OpenNewWindow
+local FCF_ResetChatWindows = FCF_ResetChatWindows
+local FCF_SavePositionAndDimensions = FCF_SavePositionAndDimensions
+local FCF_SetChatWindowFontSize = FCF_SetChatWindowFontSize
+local FCF_SetLocked = FCF_SetLocked
 local FCF_SetWindowName = FCF_SetWindowName
 local FCF_StopDragging = FCF_StopDragging
-local FCF_SetChatWindowFontSize = FCF_SetChatWindowFontSize
-local NUM_CHAT_WINDOWS = NUM_CHAT_WINDOWS
+local GetCVarBool = GetCVarBool
+local IsAddOnLoaded = IsAddOnLoaded
 local LOOT, GENERAL, TRADE = LOOT, GENERAL, TRADE
+local NUM_CHAT_WINDOWS = NUM_CHAT_WINDOWS
+local PlayMusic = PlayMusic
+local PlaySoundFile = PlaySoundFile
+local ReloadUI = ReloadUI
+local SetCVar = SetCVar
+local ToggleChatColorNamesByClassGroup = ToggleChatColorNamesByClassGroup
+local UIFrameFadeOut = UIFrameFadeOut
+local StaticPopup_Show = StaticPopup_Show
+
+-- Global variables that we don't cache, list them here for mikk's FindGlobals script
+-- GLOBALS: ActionBars, SetActionBarToggles, SLASH_VERSION1, DisableAddOn, KkthnxUIData
+-- GLOBALS: ChatFrame4, DEFAULT_CHAT_FRAME, KkthnxUIDataPerChar, InstallationMessageFrame
+-- GLOBALS: SLASH_CONFIGURE1, SLASH_RESETUI1, ChatFrame1, ChatFrame2, ChatFrame3
+-- GLOBALS: SLASH_TUTORIAL2, SLASH_TUTORIAL1, SLASH_TUTORIAL1, SLASH_CONFIGURE2
 
 local KkthnxUIInstall = CreateFrame("Frame", nil, UIParent)
 
 function KkthnxUIInstall:ChatSetup()
-	-- Setting chat frames if using KkthnxUI chats.
+	-- Setting chat frames if using KkthnxUI.
 	FCF_ResetChatWindows()
 	FCF_SetLocked(ChatFrame1, 1)
 	FCF_DockFrame(ChatFrame2)
@@ -130,11 +142,11 @@ function KkthnxUIInstall:ChatSetup()
 
 	--Adjust Chat Colors
 	--General
-	ChangeChatColor("CHANNEL1", 0.764, 0.901, 0.909)
+	ChangeChatColor("CHANNEL1", 195/255, 230/255, 232/255)
 	--Trade
-	ChangeChatColor("CHANNEL2", 0.909, 0.619, 0.474)
+	ChangeChatColor("CHANNEL2", 232/255, 158/255, 121/255)
 	--Local Defense
-	ChangeChatColor("CHANNEL3", 0.909, 0.894, 0.474)
+	ChangeChatColor("CHANNEL3", 232/255, 228/255, 121/255)
 
 	DEFAULT_CHAT_FRAME:SetUserPlaced(true)
 
@@ -236,7 +248,7 @@ local StatusBar = CreateFrame("StatusBar", nil, KkthnxUIInstallFrame)
 StatusBar:SetStatusBarTexture(C.Media.Texture)
 StatusBar:SetPoint("BOTTOM", KkthnxUIInstallFrame, "BOTTOM", 0, 60)
 StatusBar:SetHeight(20)
-StatusBar:SetWidth(KkthnxUIInstallFrame:GetWidth()-44)
+StatusBar:SetWidth(KkthnxUIInstallFrame:GetWidth() -44)
 StatusBar:SetFrameStrata("HIGH")
 StatusBar:SetFrameLevel(6)
 StatusBar:Hide()
@@ -255,25 +267,25 @@ Header:SetPoint("TOP", KkthnxUIInstallFrame, "TOP", 0, -20)
 local TextOne = KkthnxUIInstallFrame:CreateFontString(nil, "OVERLAY")
 TextOne:SetJustifyH("LEFT")
 TextOne:SetFont(C.Media.Font, 12)
-TextOne:SetWidth(KkthnxUIInstallFrame:GetWidth()-40)
+TextOne:SetWidth(KkthnxUIInstallFrame:GetWidth() -40)
 TextOne:SetPoint("TOPLEFT", KkthnxUIInstallFrame, "TOPLEFT", 20, -60)
 
 local TextTwo = KkthnxUIInstallFrame:CreateFontString(nil, "OVERLAY")
 TextTwo:SetJustifyH("LEFT")
 TextTwo:SetFont(C.Media.Font, 12)
-TextTwo:SetWidth(KkthnxUIInstallFrame:GetWidth()-40)
+TextTwo:SetWidth(KkthnxUIInstallFrame:GetWidth() -40)
 TextTwo:SetPoint("TOPLEFT", TextOne, "BOTTOMLEFT", 0, -20)
 
 local TextThree = KkthnxUIInstallFrame:CreateFontString(nil, "OVERLAY")
 TextThree:SetJustifyH("LEFT")
 TextThree:SetFont(C.Media.Font, 12)
-TextThree:SetWidth(KkthnxUIInstallFrame:GetWidth()-40)
+TextThree:SetWidth(KkthnxUIInstallFrame:GetWidth() -40)
 TextThree:SetPoint("TOPLEFT", TextTwo, "BOTTOMLEFT", 0, -20)
 
 local TextFour = KkthnxUIInstallFrame:CreateFontString(nil, "OVERLAY")
 TextFour:SetJustifyH("LEFT")
 TextFour:SetFont(C.Media.Font, 12)
-TextFour:SetWidth(KkthnxUIInstallFrame:GetWidth()-40)
+TextFour:SetWidth(KkthnxUIInstallFrame:GetWidth() -40)
 TextFour:SetPoint("TOPLEFT", TextThree, "BOTTOMLEFT", 0, -20)
 
 local StatusBarText = StatusBar:CreateFontString(nil, "OVERLAY")

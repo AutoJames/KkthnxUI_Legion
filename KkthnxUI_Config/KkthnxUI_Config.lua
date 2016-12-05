@@ -1,15 +1,38 @@
--- Gui for KkthnxUI (by fernir, tukz and tohveli, shestak)
+-- GUI for KkthnxUI (by fernir, tukz and tohveli, shestak)
 local K, C, L
 
+-- Lua API
 local _G = _G
 local format = string.format
-local max = math.max
-local pairs, type = pairs, type
+local pairs = pairs
 local print = print
-local sub = string.sub
+local tinsert = tinsert
+local tonumber = tonumber
+local tostring = tostring
+local tsort = table.sort
+local type = type
 local unpack = unpack
 
+-- Wow API
 local CreateFrame = CreateFrame
+local ERR_NOT_IN_COMBAT = ERR_NOT_IN_COMBAT
+local HideUIPanel = HideUIPanel
+local hooksecurefunc = hooksecurefunc
+local InCombatLockdown = InCombatLockdown
+local IsAddOnLoaded = IsAddOnLoaded
+local PlaySound = PlaySound
+local ReloadUI = ReloadUI
+local StaticPopup_Show = StaticPopup_Show
+local UIParent = UIParent
+
+-- Global variables that we don't cache, list them here for mikk's FindGlobals script
+-- GLOBALS: CreateUIConfig, SLASH_CONFIG1, SLASH_CONFIG2, SLASH_CONFIG3, SLASH_CONFIG4
+-- GLOBALS: SLASH_CONFIG5, SLASH_RESETCONFIG1, UIConfigLocal, Aurora, KkthnxUIConfigAllCharacters
+-- GLOBALS: KkthnxUIConfigAll, UIConfigCover, KkthnxUIConfigPublic, KkthnxUIConfigPrivate, UIConfig
+-- GLOBALS: KkthnxUIDataPerChar, KkthnxUI, UIConfigGroupSlider, Print, UIConfigMain, UISpecialFrames
+-- GLOBALS: UIConfigGroup, GameFontHighlight, OKAY, colorbuttonname, COLOR, DEFAULT, loaded, ColorPickerFrame
+-- GLOBALS: OpacitySliderFrame, Error, GameMenuFrame, GameMenuButtonLogout, GameMenuButtonAddons
+
 local Locale = GetLocale()
 local name = UnitName("player")
 local realm = GetRealmName()
@@ -50,7 +73,7 @@ local ALLOWED_GROUPS = {
 
 local function Local(o)
 	local string = o
-	for option, value in pairs(KkthnxUIConfigLocalization) do
+	for option, value in pairs(UIConfigLocal) do
 		if option == o then string = value end
 	end
 	return string
@@ -93,7 +116,7 @@ local NormalButton = function(text, parent)
 end
 
 StaticPopupDialogs.PERCHAR = {
-	text = KkthnxUIConfigLocalization.ConfigPerChar,
+	text = UIConfigLocal.ConfigPerChar,
 	OnAccept = function()
 		if KkthnxUIConfigAllCharacters:GetChecked() then
 			KkthnxUIConfigAll[realm][name] = true
@@ -118,7 +141,7 @@ StaticPopupDialogs.PERCHAR = {
 }
 
 StaticPopupDialogs.RESET_PERCHAR = {
-	text = KkthnxUIConfigLocalization.ConfigResetChar,
+	text = UIConfigLocal.ConfigResetChar,
 	OnAccept = function()
 		KkthnxUIConfigPrivate = KkthnxUIConfigPublic
 		ReloadUI()
@@ -132,7 +155,7 @@ StaticPopupDialogs.RESET_PERCHAR = {
 }
 
 StaticPopupDialogs.RESET_ALL = {
-	text = KkthnxUIConfigLocalization.ConfigResetAll,
+	text = UIConfigLocal.ConfigResetAll,
 	OnAccept = function()
 		KkthnxUIConfigPublic = nil
 		KkthnxUIConfigPrivate = nil
@@ -150,7 +173,11 @@ StaticPopupDialogs.RESET_ALL = {
 
 local function SetValue(group, option, value)
 	local mergesettings
-	if KkthnxUIConfigPrivate == KkthnxUIConfigPublic then mergesettings = true else mergesettings = false end
+	if KkthnxUIConfigPrivate == KkthnxUIConfigPublic then
+		mergesettings = true
+	else
+		mergesettings = false
+	end
 
 	if KkthnxUIConfigAll[realm][name] == true then
 		if not KkthnxUIConfigPrivate then KkthnxUIConfigPrivate = {} end
@@ -162,6 +189,7 @@ local function SetValue(group, option, value)
 			if not KkthnxUIConfigPrivate[group] then KkthnxUIConfigPrivate[group] = {} end
 			KkthnxUIConfigPrivate[group][option] = value
 		end
+
 		if not KkthnxUIConfigPublic then KkthnxUIConfigPublic = {} end
 		if not KkthnxUIConfigPublic[group] then KkthnxUIConfigPublic[group] = {} end
 		KkthnxUIConfigPublic[group][option] = value
@@ -290,7 +318,7 @@ function CreateUIConfig()
 	UIConfigCover:SetPoint("BOTTOMRIGHT", 0, 0)
 	UIConfigCover:SetFrameLevel(UIConfigMain:GetFrameLevel() + 20)
 	UIConfigCover:EnableMouse(true)
-	UIConfigCover:SetScript("OnMouseDown", function(self) print(KkthnxUIConfigLocalization.MakeSelection) end)
+	UIConfigCover:SetScript("OnMouseDown", function(self) print(UIConfigLocal.MakeSelection) end)
 	UIConfigCover:Hide()
 
 	-- Group Scroll
@@ -310,8 +338,8 @@ function CreateUIConfig()
 	end
 	local function pairsByKey(t, f)
 		local a = {}
-		for n in pairs(t) do table.insert(a, n) end
-		table.sort(a, sortMyTable)
+		for n in pairs(t) do tinsert(a, n) end
+		tsort(a, sortMyTable)
 		local i = 0
 		local iter = function()
 			i = i + 1
@@ -325,8 +353,8 @@ function CreateUIConfig()
 	local GetOrderedIndex = function(t)
 		local OrderedIndex = {}
 
-		for key in pairs(t) do table.insert(OrderedIndex, key) end
-		table.sort(OrderedIndex)
+		for key in pairs(t) do tinsert(OrderedIndex, key) end
+		tsort(OrderedIndex)
 		return OrderedIndex
 	end
 
@@ -550,7 +578,7 @@ function CreateUIConfig()
 		end
 	end)
 
-	local totalreset = NormalButton(KkthnxUIConfigLocalization.ConfigButtonReset, UIConfigMain)
+	local totalreset = NormalButton(UIConfigLocal.ConfigButtonReset, UIConfigMain)
 	totalreset:SetPoint("TOPRIGHT", UIConfigBG, "TOPRIGHT", 128, -31)
 	totalreset:SetScript("OnClick", function(self)
 		StaticPopup_Show("RESET_UI")
@@ -561,11 +589,11 @@ function CreateUIConfig()
 		KkthnxUIConfigPublic = {}
 	end)
 
-	local load = NormalButton("|cff00FF00" .. KkthnxUIConfigLocalization.ConfigApplyButton .. "|r", UIConfigMain)
+	local load = NormalButton("|cff00FF00" .. UIConfigLocal.ConfigApplyButton .. "|r", UIConfigMain)
 	load:SetPoint("TOP", totalreset, "BOTTOM", 0, -30)
 	load:SetScript("OnClick", function(self) ReloadUI() end)
 
-	local close = NormalButton("|cffFF0000" .. KkthnxUIConfigLocalization.ConfigCloseButton .. "|r", UIConfigMain)
+	local close = NormalButton("|cffFF0000" .. UIConfigLocal.ConfigCloseButton .. "|r", UIConfigMain)
 	close:SetPoint("TOP", load, "BOTTOM", 0, -8)
 	close:SetScript("OnClick", function(self) PlaySound("igMainMenuOption") UIConfigMain:Hide() end)
 
@@ -587,7 +615,7 @@ function CreateUIConfig()
 		end
 
 		local label = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		label:SetText(KkthnxUIConfigLocalization.ConfigSetSavedSettings)
+		label:SetText(UIConfigLocal.ConfigSetSavedSettings)
 		label:SetPoint("RIGHT", button, "LEFT")
 
 		if KkthnxUIConfigAll[realm][name] == true then

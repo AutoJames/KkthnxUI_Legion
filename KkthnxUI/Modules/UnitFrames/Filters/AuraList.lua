@@ -183,7 +183,7 @@ AuraList.Taunt = {
 for k, v in pairs(AuraList) do
 	for i = 1, #v do
 		if not GetSpellInfo(v[i]) then
-			print(string.format("Invalid spellID %d in : %s", v[i], s))
+			print(string.format("Invalid spellID %d in : %s", v[i], k))
 		end
 	end
 end

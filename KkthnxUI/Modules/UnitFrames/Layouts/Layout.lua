@@ -1,22 +1,38 @@
 local K, C, L = select(2, ...):unpack()
 if C.Unitframe.Enable ~= true then return end
 
-local _G = _G
-local pairs = pairs
-local unpack = unpack
-local select = select
-
-local CreateFrame = CreateFrame
-local UnitDetailedThreatSituation = UnitDetailedThreatSituation
-local MAX_BOSS_FRAMES = MAX_BOSS_FRAMES
-local InCombatLockdown = InCombatLockdown
-local UnitClassification = UnitClassification
-local UnitClass = UnitClass
-local UnitIsPlayer = UnitIsPlayer
-
 local _, ns = ...
 local config = ns.config
 local oUF = ns.oUF or oUF
+
+-- Lua API
+local _G = _G
+local pairs = pairs
+local print = print
+local select = select
+local tinsert = table.insert
+local unpack = unpack
+
+-- Wow API
+local CLASS_ICON_TCOORDS = CLASS_ICON_TCOORDS
+local CreateFrame = CreateFrame
+local ERR_NOT_IN_COMBAT = ERR_NOT_IN_COMBAT
+local GetThreatStatusColor = GetThreatStatusColor
+local InCombatLockdown = InCombatLockdown
+local MAX_BOSS_FRAMES = MAX_BOSS_FRAMES
+local UnitClass = UnitClass
+local UnitClassification = UnitClassification
+local UnitDetailedThreatSituation = UnitDetailedThreatSituation
+local UnitHasVehicleUI = UnitHasVehicleUI
+local UnitIsPlayer = UnitIsPlayer
+local UnitIsUnit = UnitIsUnit
+
+-- Global variables that we don't cache, list them here for mikk's FindGlobals script
+-- GLOBALS: ComboPointPlayerFrame, math, UnitVehicleSkin, ComboFrame_Update, securecall
+-- GLOBALS: TotemFrame, EclipseBarFrame, RuneFrame, PriestBarFrame, TotemFrame_Update
+-- GLOBALS: EclipseBar_UpdateShown, PriestBarFrame_CheckAndShow, _ENV, UnitPowerBarAlt_Initialize
+-- GLOBALS: SetPortraitTexture, oUF_KkthnxPet,
+
 local textPath = "Interface\\AddOns\\KkthnxUI\\Media\\Unitframes\\"
 local pathFat = textPath.."Fat\\"
 local pathNormal = textPath.."Normal\\"
@@ -440,7 +456,7 @@ local function CreateUnitLayout(self, unit)
 	-- Healthbar
 	self.Health = K.CreateStatusBar(self, nil, nil, true)
 	self.Health:SetFrameLevel(self:GetFrameLevel()-1)
-	table.insert(self.mouseovers, self.Health)
+	tinsert(self.mouseovers, self.Health)
 	self.Health.PostUpdate = K.PostUpdateHealth
 	self.Health.Smooth = true
 	self.Health.frequentUpdates = true
@@ -458,7 +474,7 @@ local function CreateUnitLayout(self, unit)
 	-- Power bar
 	self.Power = K.CreateStatusBar(self, nil, nil, true)
 	self.Power:SetFrameLevel(self:GetFrameLevel()-1)
-	table.insert(self.mouseovers, self.Power)
+	tinsert(self.mouseovers, self.Power)
 	self.Power.frequentUpdates = self.cUnit == "player" or self.cUnit == "boss"
 	self.Power.PostUpdate = K.PostUpdatePower
 	self.Power.Smooth = true
@@ -796,7 +812,7 @@ local function CreateUnitLayout(self, unit)
 		self.QuestIcon:SetSize(32, 32)
 		self.QuestIcon:SetPoint("CENTER", self.Health, "TOPRIGHT", 1, 10)
 
-		table.insert(self.__elements, function(self, _, unit)
+		tinsert(self.__elements, function(self, _, unit)
 			self.Texture:SetTexture(GetTargetTexture(self.cUnit, UnitClassification(unit)))
 		end)
 	end

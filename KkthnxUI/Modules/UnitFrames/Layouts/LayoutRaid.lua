@@ -1,12 +1,31 @@
 local K, C, L = select(2, ...):unpack()
 if C.Raidframe.Enable ~= true then return end
 
+-- Lua API
+local format = string.format
+local tinsert = table.insert
+local unpack = unpack
+
+-- Wow API
+local GetThreatStatusColor = GetThreatStatusColor
+local UnitHasIncomingResurrection = UnitHasIncomingResurrection
+local UnitHasMana = UnitHasMana
+local UnitIsConnected = UnitIsConnected
+local UnitIsDead = UnitIsDead
+local UnitIsDeadOrGhost = UnitIsDeadOrGhost
+local UnitIsGhost = UnitIsGhost
+local UnitIsPlayer = UnitIsPlayer
+local UnitIsUnit = UnitIsUnit
+local UnitPowerType = UnitPowerType
+local UnitThreatSituation = UnitThreatSituation
+
+-- Global variables that we don't cache, list them here for mikk's FindGlobals script
+-- GLOBALS: DEAD, PLAYER_OFFLINE, CreateFrame, UnitFrame_OnEnter, UnitFrame_OnLeave
+
 -- Credits to Neav, Renstrom, Grimsbain
 local _, ns = ...
 local oUF = ns.oUF or oUF
 local Movers = K.Movers
-
-local unpack = unpack
 
 local function UpdateThreat(self, _, unit)
 	if (self.unit ~= unit) then
@@ -195,7 +214,7 @@ local function CreateRaidLayout(self, unit)
 		self.Power.bg:SetColorTexture(.6, .6, .6)
 		self.Power.bg.multiplier = 0.3
 
-		table.insert(self.__elements, UpdatePower)
+		tinsert(self.__elements, UpdatePower)
 		self:RegisterEvent("UNIT_DISPLAYPOWER", UpdatePower)
 		UpdatePower(self, _, unit)
 	end
@@ -292,7 +311,7 @@ local function CreateRaidLayout(self, unit)
 		self.ThreatText:SetText("AGGRO")
 	end
 
-	table.insert(self.__elements, UpdateThreat)
+	tinsert(self.__elements, UpdateThreat)
 	self:RegisterEvent("UNIT_THREAT_LIST_UPDATE", UpdateThreat)
 	self:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE", UpdateThreat)
 
@@ -417,7 +436,6 @@ oUF:RegisterStyle("oUF_Kkthnx_Raid_MT", CreateRaidLayout)
 oUF:SetActiveStyle("oUF_Kkthnx_Raid")
 
 if not C.Raidframe.UseHealLayout then
-	-- local raid = oUF:SpawnHeader("oUF_Raid", nil, C.Unitframe.Party and "custom [@raid6, exists] show; hide" or "solo, party, raid",
 	local raid = oUF:SpawnHeader("oUF_Raid", nil, C.Raidframe.RaidAsParty and "custom [group:party][group:raid] show; hide" or C.Unitframe.Party and "custom [@raid6, exists] show; hide" or "solo, party, raid",
 	"oUF-initialConfigFunction", [[
 	local header = self:GetParent()
@@ -435,36 +453,6 @@ if not C.Raidframe.UseHealLayout then
 	"maxColumns", math.ceil(40 / 5),
 	"unitsPerColumn", C.Raidframe.MaxUnitPerColumn,
 	"columnAnchorPoint", "LEFT",
-	"initial-width", C.Raidframe.Width,
-	"initial-height", C.Raidframe.Height,
-	"columnSpacing", K.Scale(8),
-	"yOffset", -K.Scale(8),
-	"xOffset", K.Scale(8))
-
-	raid:SetScale(C.Raidframe.Scale)
-	raid:SetFrameStrata("LOW")
-	raid:SetPoint(unpack(C.Position.UnitFrames.Raid))
-	Movers:RegisterFrame(raid)
-	raid:Show()
-
-else
-	local raid = oUF:SpawnHeader("oUF_Raid", nil, C.Raidframe.RaidAsParty and "custom [group:party][group:raid] show; hide" or C.Unitframe.Party and "custom [@raid6, exists] show; hide" or "solo, party, raid",
-	"oUF-initialConfigFunction", [[
-	local header = self:GetParent()
-	self:SetWidth(header:GetAttribute("initial-width"))
-	self:SetHeight(header:GetAttribute("initial-height"))
-	]],
-	"showParty", true,
-	"showRaid", true,
-	"showPlayer", true,
-	"showSolo", false,
-	"point", "LEFT",
-	"groupFilter", "1, 2, 3, 4, 5, 6, 7, 8",
-	"groupingOrder", "1, 2, 3, 4, 5, 6, 7, 8",
-	"groupBy", "GROUP", -- C.Raid.GroupByValue
-	"maxColumns", 8,
-	"unitsPerColumn", 10,
-	"columnAnchorPoint", "BOTTOM",
 	"initial-width", C.Raidframe.Width,
 	"initial-height", C.Raidframe.Height,
 	"columnSpacing", K.Scale(8),
